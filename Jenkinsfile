@@ -1,10 +1,20 @@
 pipeline {
   agent any
-  stages {
-    stage('Parallel') {
+  stage('Get Kernel') {
       steps {
-        sh 'echo "Hello"'
+        script {
+          try {
+            KERNEL_VERSION = sh (script: "uname -r", returnStdout: true)
+          } catch(err) {
+            echo "CAUGHT ERROR: ${err}"
+            throw err
+          }
+        }
       }
     }
-  }
+    stage('Say Kernel') {
+      steps {
+        echo "${KERNEL_VERSION}"
+      }
+    }
 }
