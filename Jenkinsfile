@@ -2,7 +2,6 @@ pipeline {
   agent {
     label 'jdk8'
   }
-  
   stages {
     stage('Say Hello') {
       steps {
@@ -13,35 +12,30 @@ pipeline {
       }
     }
     stage('Checkpoint') {
-         agent none
-         steps {
-            checkpoint 'Checkpoint'
-         }
-      }
-    stage('Testing') {
-      failFast true
-      parallel {
-        stage('Java 8') {
-          agent {
-            label 'jdk8'
-          }
-          steps {
-            sh 'java -version'
-            sleep(time: 10, unit: 'SECONDS')
-          }
-        }
-        stage('Java 9') {
-          agent {
-            label 'jdk9'
-          }
-          steps {
-            sh 'java -version'
-            sleep(time: 20, unit: 'SECONDS')
-          }
-        }
+      steps {
+        checkpoint 'Checkpoint'
       }
     }
-  }
+stage('Testing') {
+        parallel {
+          stage('Java 8') {
+            agent { label 'jdk9' }
+            steps {
+              container('maven8') {
+                sh 'mvn -v'
+              }
+            }
+          }
+          stage('Java 9') {
+            agent { label 'jdk8' }
+            steps {
+              container('maven9') {
+                sh 'mvn -v'
+              }
+            }
+          }
+        }
+      }
   environment {
     MY_NAME = 'Diane'
     TEST_USER = credentials('test-user')
@@ -49,9 +43,9 @@ pipeline {
   post {
     aborted {
       echo 'Why didn\'t you push my button?'
-      
+
     }
-    
+
   }
   parameters {
     string(name: 'Name', defaultValue: 'whoever you are', description: 'Who should I say hi to?')
